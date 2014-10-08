@@ -73,9 +73,20 @@
   (format "_%s_" contents))
 
 (defun org-confluence-item (item contents info)
-  (concat (make-string (1+ (org-confluence--li-depth item)) ?\-)
-          " "
-          (org-trim contents)))
+  (let* (;; from ox-html/org-html-item
+	 (plain-list (org-export-get-parent item))
+	 (type (org-element-property :type plain-list))
+	 (counter (org-element-property :counter plain-list))
+	 ;;checkbox not yet handled
+	 ;; (checkbox (org-element-property :checkbox plain-list))
+	 (tag (let ((tag (org-element-property :tag item)))
+	 	(and tag (org-export-data tag info))))
+	 (text (org-trim contents))
+	 (listchar (if (eq type 'ordered) ?\# ?\-)))
+    (concat (make-string (1+ (org-confluence--li-depth item)) listchar) " "
+	    (case type
+	      (descriptive (format "*%s* :: %s" (or tag counter) text))
+	      (t text)))))
 
 (defun org-confluence-fixed-width (fixed-width contents info)
   (format "\{\{%s\}\}" contents))
